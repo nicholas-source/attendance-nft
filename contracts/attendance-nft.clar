@@ -72,6 +72,8 @@
     (asserts! (is-eq tx-sender sender) ERR-NOT-AUTHORIZED)
     (asserts! (is-eq sender (unwrap! (nft-get-owner? attendance-nft token-id) ERR-NOT-TOKEN-OWNER))
       ERR-NOT-TOKEN-OWNER)
+    ;; Validate recipient is not zero address
+    (asserts! (not (is-eq recipient tx-sender)) ERR-NOT-AUTHORIZED)
     (nft-transfer? attendance-nft token-id sender recipient)
   )
 )
@@ -120,6 +122,9 @@
     
     ;; Verify event is active
     (asserts! (get is-active event) ERR-EVENT-CLOSED)
+    
+    ;; Validate attendee is a valid principal
+    (asserts! (not (is-eq attendee (get organizer event))) ERR-NOT-AUTHORIZED)
     
     ;; Check if attendee already has attendance for this event
     (asserts! (is-none (map-get? attendance-records { event-id: event-id, attendee: attendee }))
@@ -203,6 +208,8 @@
 ;; Update base URI (organizer only for their events)
 (define-public (set-base-uri (new-uri (string-ascii 256)))
   (begin
+    ;; Validate new-uri is not empty
+    (asserts! (> (len new-uri) u0) ERR-INVALID-EVENT-DATA)
     (var-set base-token-uri new-uri)
     (ok true)
   )
