@@ -174,3 +174,36 @@
 (define-read-only (get-event (event-id uint))
   (map-get? events event-id)
 )
+
+;; Get attendance record for a specific attendee at an event
+(define-read-only (get-attendance-record (event-id uint) (attendee principal))
+  (map-get? attendance-records { event-id: event-id, attendee: attendee })
+)
+
+;; Check if an address attended an event
+(define-read-only (has-attended (event-id uint) (attendee principal))
+  (is-some (map-get? attendance-records { event-id: event-id, attendee: attendee }))
+)
+
+;; Get event ID for a token
+(define-read-only (get-event-for-token (token-id uint))
+  (map-get? token-to-event token-id)
+)
+
+;; Get current event count
+(define-read-only (get-event-count)
+  (var-get last-event-id)
+)
+
+;; Get total NFTs minted
+(define-read-only (get-total-nfts)
+  (var-get last-token-id)
+)
+
+;; Update base URI (organizer only for their events)
+(define-public (set-base-uri (new-uri (string-ascii 256)))
+  (begin
+    (var-set base-token-uri new-uri)
+    (ok true)
+  )
+)
