@@ -370,6 +370,8 @@ describe("Attendance NFT Contract Tests", () => {
     });
 
     it("updates event issued count correctly", () => {
+      const futureBlock = simnet.blockHeight + 100;
+      
       simnet.callPublicFn(
         "attendance-nft",
         "issue-attendance",
@@ -390,8 +392,16 @@ describe("Attendance NFT Contract Tests", () => {
         organizer
       );
       
-      const eventData = result as any;
-      expect(eventData.value.data["issued-count"]).toStrictEqual(Cl.uint(2));
+      expect(result).toBeSome(
+        Cl.tuple({
+          name: Cl.stringAscii("Conference 2025"),
+          organizer: Cl.principal(organizer),
+          date: Cl.uint(futureBlock),
+          "max-attendees": Cl.uint(3),
+          "issued-count": Cl.uint(2),
+          "is-active": Cl.bool(true),
+        })
+      );
     });
   });
 
