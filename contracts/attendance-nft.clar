@@ -65,3 +65,44 @@
 (define-read-only (get-owner (token-id uint))
   (ok (nft-get-owner? attendance-nft token-id))
 )
+
+;; Transfer token - SIP-009 requires this signature
+(define-public (transfer (token-id uint) (sender principal) (recipient principal))
+  (begin
+    (asserts! (is-eq tx-sender sender) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq sender (unwrap! (nft-get-owner? attendance-nft token-id) ERR-NOT-TOKEN-OWNER))
+      ERR-NOT-TOKEN-OWNER)
+    (nft-transfer? attendance-nft token-id sender recipient)
+  )
+)
+
+;; Custom Functions for Event Management
+
+;; Create a new event
+(define-public (create-event (name (string-ascii 100)) (date uint) (max-attendees uint))
+  (let
+    (
+      (event-id (+ (var-get last-event-id) u1))
+    )
+    ;; Validate inputs
+    (asserts! (> (len name) u0) ERR-INVALID-EVENT-DATA)
+    (asserts! (> date block-height) ERR-INVALID-EVENT-DATA)
+    (asserts! (> max-attendees u0) ERR-INVALID-EVENT-DATA)
+    
+    ;; Create event
+    (map-set events event-id
+      {
+        name: name,
+        organizer: tx-sender,
+        date: date,
+        max-attendees: max-attendees,
+        issued-count: u0,
+        is-active: true
+      }
+    )
+    
+    ;; Update event counter
+    (var-set last-event-id event-id)
+    (ok event-id)
+  )
+)
