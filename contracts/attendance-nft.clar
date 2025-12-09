@@ -33,3 +33,35 @@
   { event-id: uint, attendee: principal }
   { token-id: uint, issued-at: uint }
 )
+
+;; Token metadata: token-id -> event-id
+(define-map token-to-event
+  uint
+  uint
+)
+
+;; Error codes
+(define-constant ERR-NOT-AUTHORIZED (err u100))
+(define-constant ERR-NOT-TOKEN-OWNER (err u101))
+(define-constant ERR-EVENT-NOT-FOUND (err u102))
+(define-constant ERR-EVENT-CLOSED (err u103))
+(define-constant ERR-ALREADY-ATTENDED (err u104))
+(define-constant ERR-MAX-ATTENDEES-REACHED (err u105))
+(define-constant ERR-INVALID-EVENT-DATA (err u106))
+
+;; SIP-009 Required Functions
+
+;; Get the last token ID
+(define-read-only (get-last-token-id)
+  (ok (var-get last-token-id))
+)
+
+;; Get token URI - returns metadata link for the NFT
+(define-read-only (get-token-uri (token-id uint))
+  (ok (some (var-get base-token-uri)))
+)
+
+;; Get owner of a token
+(define-read-only (get-owner (token-id uint))
+  (ok (nft-get-owner? attendance-nft token-id))
+)
