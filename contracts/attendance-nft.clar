@@ -86,7 +86,7 @@
     )
     ;; Validate inputs
     (asserts! (> (len name) u0) ERR-INVALID-EVENT-DATA)
-    (asserts! (> date block-height) ERR-INVALID-EVENT-DATA)
+    (asserts! (> date stacks-block-height) ERR-INVALID-EVENT-DATA)
     (asserts! (> max-attendees u0) ERR-INVALID-EVENT-DATA)
     
     ;; Create event
@@ -134,7 +134,7 @@
     ;; Record attendance
     (map-set attendance-records
       { event-id: event-id, attendee: attendee }
-      { token-id: token-id, issued-at: block-height }
+      { token-id: token-id, issued-at: stacks-block-height }
     )
     
     ;; Map token to event
