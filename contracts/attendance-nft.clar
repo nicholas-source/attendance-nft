@@ -106,3 +106,71 @@
     (ok event-id)
   )
 )
+
+;; Issue attendance NFT to an attendee
+(define-public (issue-attendance (event-id uint) (attendee principal))
+  (let
+    (
+      (event (unwrap! (map-get? events event-id) ERR-EVENT-NOT-FOUND))
+      (token-id (+ (var-get last-token-id) u1))
+      (new-issued-count (+ (get issued-count event) u1))
+    )
+    ;; Verify organizer
+    (asserts! (is-eq tx-sender (get organizer event)) ERR-NOT-AUTHORIZED)
+    
+    ;; Verify event is active
+    (asserts! (get is-active event) ERR-EVENT-CLOSED)
+    
+    ;; Check if attendee already has attendance for this event
+    (asserts! (is-none (map-get? attendance-records { event-id: event-id, attendee: attendee }))
+      ERR-ALREADY-ATTENDED)
+    
+    ;; Check max attendees
+    (asserts! (<= new-issued-count (get max-attendees event)) ERR-MAX-ATTENDEES-REACHED)
+    
+    ;; Mint NFT
+    (try! (nft-mint? attendance-nft token-id attendee))
+    
+    ;; Record attendance
+    (map-set attendance-records
+      { event-id: event-id, attendee: attendee }
+      { token-id: token-id, issued-at: block-height }
+    )
+    
+    ;; Map token to event
+    (map-set token-to-event token-id event-id)
+    
+    ;; Update event issued count
+    (map-set events event-id
+      (merge event { issued-count: new-issued-count })
+    )
+    
+    ;; Update token counter
+    (var-set last-token-id token-id)
+    (ok token-id)
+  )
+)
+
+;; Close an event (stop issuing new NFTs)
+(define-public (close-event (event-id uint))
+  (let
+    (
+      (event (unwrap! (map-get? events event-id) ERR-EVENT-NOT-FOUND))
+    )
+    ;; Verify organizer
+    (asserts! (is-eq tx-sender (get organizer event)) ERR-NOT-AUTHORIZED)
+    
+    ;; Close event
+    (map-set events event-id
+      (merge event { is-active: false })
+    )
+    (ok true)
+  )
+)
+
+;; Read-only functions
+
+;; Get event details
+(define-read-only (get-event (event-id uint))
+  (map-get? events event-id)
+)
