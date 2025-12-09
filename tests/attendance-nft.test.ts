@@ -369,29 +369,30 @@ describe("Attendance NFT Contract Tests", () => {
       expect(result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
     });
 
-    it("updates event issued count correctly", () => {
-      simnet.callPublicFn(
+    it("issues multiple attendance NFTs with incrementing token IDs", () => {
+      const result1 = simnet.callPublicFn(
         "attendance-nft",
         "issue-attendance",
         [Cl.uint(1), Cl.principal(attendee1)],
         organizer
       );
-      simnet.callPublicFn(
+      expect(result1.result).toBeOk(Cl.uint(1));
+
+      const result2 = simnet.callPublicFn(
         "attendance-nft",
         "issue-attendance",
         [Cl.uint(1), Cl.principal(attendee2)],
         organizer
       );
+      expect(result2.result).toBeOk(Cl.uint(2));
 
-      const { result } = simnet.callReadOnlyFn(
+      const result3 = simnet.callPublicFn(
         "attendance-nft",
-        "get-event",
-        [Cl.uint(1)],
+        "issue-attendance",
+        [Cl.uint(1), Cl.principal(attendee3)],
         organizer
       );
-      
-      // Verify event exists and issued-count is 2
-      expect(result).toBeSome();
+      expect(result3.result).toBeOk(Cl.uint(3));
     });
   });
 
